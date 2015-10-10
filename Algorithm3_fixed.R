@@ -107,6 +107,9 @@ for(iter in 2:(B+NG)){
   AGibbs[iter,3:(nobs+2)] = wblock_fc.f(AGibbs[iter,1], AGibbs[iter,2], y, psi)
 }
 
+# Quick plot
+quickgraph(AGibbs,B,3)
+
 ## GGPLOT
 
 mu_draws <- AGibbs[,1]

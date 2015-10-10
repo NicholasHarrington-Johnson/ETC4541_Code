@@ -152,6 +152,10 @@ for(iter in 2:(B+NG)){
   RWMHGibbs[iter,2] = sig_RWMH.f(RWMHGibbs[iter,1], RWMHGibbs[(iter-1),2], y, psi,tuner[2])
 }
   
+# Quick plot
+quickgraph(RWMHGibbs,B,2)
+
+
 ## GGPLOT
 mu_draws <- RWMHGibbs[,1]
 sigma_draws <- RWMHGibbs[,2]

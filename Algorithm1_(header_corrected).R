@@ -153,6 +153,9 @@ for(iter in 2:(B+NG)){
   MHGibbs[iter,2] = sig_MH.f(MHGibbs[iter,1], MHGibbs[(iter-1),2], y, psi)
 }
 
+# Quick plot
+quickgraph(MHGibbs,B,1)
+
 ## ggplot of MCMC
 mu_draws <- MHGibbs[,1]
 sigma_draws <- MHGibbs[,2]
