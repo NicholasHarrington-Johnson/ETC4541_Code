@@ -7,7 +7,8 @@
 #  Code written by Catherine Forbes (let me know if you spot any errors!)
 #
 #######################################################################
-
+library(ggplot2)
+library(gridExtra)
 # Generate some iid data y = mu + sig*eps where eps is standardised student-t(5)
 set.seed(23395710)
 
@@ -133,7 +134,7 @@ sig_MH.f = function(mu_in, sig_last, y_in, psi_in){
 
 # define number of desired iterations
 B = 100 # burn-in draws
-NG = 1000 # retained draws
+NG = 10000 # retained draws
 
 # fix psi to its true value
 psi = psitrue

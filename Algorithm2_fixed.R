@@ -129,7 +129,7 @@ sig_RWMH.f = function(mu_in, sig_last, y_in, psi_in, sig_tune){
 
 # define number of desired iterations
 B = 100 # burn-in draws
-NG = 1000 # retained draws
+NG = 10000 # retained draws
 
 # fix psi to its true value
 psi = psitrue
@@ -159,7 +159,7 @@ quickgraph(RWMHGibbs,B,2)
 ## GGPLOT
 mu_draws <- RWMHGibbs[,1]
 sigma_draws <- RWMHGibbs[,2]
-draw.num <- c(1:nrow(MHGibbs))
+draw.num <- c(1:nrow(RWMHGibbs))
 
 plot1 <- ggplot(data.frame(mu_draws,sigma_draws,draw.num),aes(x=draw.num,y=mu_draws))+geom_line(color="red")+labs(y=expression(paste(mu, " iterates")),x="Iterations")+ggtitle("Iterates from Algorithm 2 for Student t data problem")+geom_vline(xintercept=B,colour="green")
 plot2 <- ggplot(data.frame(mu_draws,sigma_draws,draw.num),aes(x=draw.num,y=sigma_draws))+geom_line(color="blue")+labs(x="Iteratations",y=expression(paste(sigma, " iterates")))+geom_vline(xintercept=B,colour="green")

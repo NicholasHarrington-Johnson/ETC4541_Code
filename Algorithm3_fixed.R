@@ -84,7 +84,7 @@ wblock_fc.f = function(mu_in, sig_in, y_in, psi_in){
 
 # define number of desired iterations
 B = 100 # burn-in draws
-NG = 1000 # retained draws
+NG = 10000 # retained draws
 
 # fix psi to its true value
 psi = psitrue

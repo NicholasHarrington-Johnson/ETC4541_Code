@@ -16,12 +16,12 @@
 library(coda)
 
 # Create MCMC objects
-B1 = 100 # burnin may be redefined here
-M1 = 1000 # number of retained draws redefined here too
+B1 = 500 # burnin may be redefined here
+M1 = 2000 # number of retained draws redefined here too
 B2 <- 100
-M2 <- 1000
-B3 <- 100
-M3 <- 1000
+M2 <- 6000
+B3 <- 250
+M3 <- 2000
 
 MH.mcmc = mcmc(MHGibbs[(B1+1):(B1+M1),])
 RWMH.mcmc = mcmc(RWMHGibbs[(B2+1):(B2+M2),])
@@ -32,6 +32,33 @@ A3.mcmc = mcmc(AGibbs[(B3+1):(B3+M3),1:2])
 summary(MH.mcmc)
 summary(RWMH.mcmc)
 summary(A3.mcmc)
+
+####################################################################################
+
+# GGPLOT stuff
+
+# A1
+A_1 <- ggs(MH.mcmc)
+ggmcmc(A_1,file="Alg_1_Density.pdf",plot="density")
+ggmcmc(A_1,file="Alg_1_running.pdf",plot="running")
+ggmcmc(A_1,file="Alg_1_ACF.pdf",plot="autocorrelation")
+
+# A2
+A_2 <- ggs(RWMH.mcmc)
+ggmcmc(A_2,file="Alg_2_Density.pdf",plot="density")
+ggmcmc(A_2,file="Alg_2_running.pdf",plot="running")
+ggmcmc(A_2,file="Alg_2_ACF.pdf",plot="autocorrelation")
+
+# A3
+A_3 <- ggs(A3.mcmc)
+ggmcmc(A_3,file="Alg_3_Density.pdf",plot="density")
+ggmcmc(A_3,file="Alg_3_running.pdf",plot="running")
+ggmcmc(A_3,file="Alg_3_ACF.pdf",plot="autocorrelation")
+
+
+####################################################################################
+
+
 # Traceplots
 traceplot(MH.mcmc,main="Traceplot for Algorithm 1")
 traceplot(RWMH.mcmc,main="Traceplot for Algorithm 2")
@@ -62,7 +89,7 @@ autocorr.diag(A3.mcmc,lags=c(seq(1,10,1),seq(20,50,10)))
 autocorr.plot(MH.mcmc,main="ACF for Algorithm 1")
 autocorr.plot(RWMH.mcmc,main="ACF for Algorithm 2")
 autocorr.plot(A3.mcmc,main="ACF for Algorithm 3")
-
+plog <- ggplot(as.data.frame(MHGibbs[,1]),aes(x=c(seq(-5,10,1))))
 # Density plots 
 par(mfrow=c(3,2))
 densplot(MH.mcmc,main="Density from Algorithm 1")
@@ -94,3 +121,6 @@ M3/effectiveSize(A3.mcmc)
 rejectionRate(MH.mcmc)
 rejectionRate(RWMH.mcmc)
 rejectionRate(A3.mcmc)
+
+# Gelman
+#gelman.diag(MH.mcmc,confidence=0.95,transform=FALSE,autoburnin = FALSE,multivariate = TRUE)
