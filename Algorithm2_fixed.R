@@ -82,7 +82,7 @@ logpzetakernel.f = function(y_in, mu_in, zeta_in, psi_in){
   # see slide 44
   
   T = length(y_in) 
-  logkernel = -zeta_in*(T+1) # a scalar
+  logkernel = -zeta_in*(T) # a scalar
   terms = -0.5*(psi_in+1)*log(1+(((y_in - mu_in)/exp(zeta_in))^2)/(psi_in-2))   # a vector
   
   out = logkernel+sum(terms)   # a scalar
