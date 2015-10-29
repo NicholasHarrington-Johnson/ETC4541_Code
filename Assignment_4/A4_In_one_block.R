@@ -1,3 +1,8 @@
+# Set priors for my functions
+nu_eps <- 1
+nu_eta <- 1
+sigma.2.hat_eps <- 1
+sigma.2.hat_eta <- 1
 ## set parameters
 sigeta.true = 1
 sigeps.true = 2
@@ -28,8 +33,6 @@ title("Simulated local level data")
 lines(0:T,c(alpha0.true,alpha.true),col="red")
 
 # condition on the true values of the parameters
-sigeta = sigeta.true
-sigeps = sigeps.true 
 
 # Now think about inference for the state variables, given the data and the variance parameters
 # First run FF (only once) and save all output
@@ -44,21 +47,20 @@ sigeps = sigeps.true
 # sigsqeps is the variance of the measurement error (eps)
 # sigsqeta is the variance of the state error (eta)
 
-# initialise variables
-apred = rep(0,T)
-Ppred = rep(0,T)
-afilt = rep(0,T)
-Pfilt = rep(0,T)
-v = rep(0,T)
-M = rep(0,T)
-F = rep(0,T)
-
-# setting initial state distribution
-a0l0 = 0
-P0l0 = 100
-
 # Forward filter
-
+FFfunction <- function(sigeta,sigeps){
+  # initialise variables
+  apred = rep(0,T)
+  Ppred = rep(0,T)
+  afilt = rep(0,T)
+  Pfilt = rep(0,T)
+  v = rep(0,T)
+  M = rep(0,T)
+  F = rep(0,T)
+  
+  # setting initial state distribution
+  a0l0 = 0
+  P0l0 = 100
 for(i in 1:T){
   if(i==1){
     apred[i] = a0l0 
@@ -75,6 +77,11 @@ for(i in 1:T){
   afilt[i] = apred[i]+M[i]*v[i]/F[i]
   Pfilt[i] = Ppred[i]-M[i]^2/F[i]
 }
+  aP <- data.frame(afilt,Pfilt)
+  return(aP)
+}
+
+init <- FFfunction(sigeta.true,sigeps.true)
 
 lines(1:T,afilt[1:T],col="green")
 
@@ -86,15 +93,26 @@ BSt.f = function(filtat,filtPt,nextstatestar,sigsqstate){
   Mtstar = filtPt
 
   asmt = filtat + Mtstar*vtstar/Ftstar
-  Psmt = filtPt - Mtstar^2/Ftstar
-
-  out = rnorm(1,mean = asmt,sd=sqrt(Psmt))
+  Psmt = sqrt(filtPt - Mtstar^2/Ftstar)
+  if(Psmt>1e9){
+    print("Psmt is too big")
+    Psmt <- 1e9
+  }
+  if(is.nan(Psmt)){
+    print("Psmt is negative square root")
+    Psmt <- abs(filtPt - Mtstar^2/Ftstar)
+    Psmt <- sqrt(Psmt)
+  }
+  out = rnorm(1,mean = asmt,sd=Psmt)
 
   return(out)
 }
+# Draw iteration 1 of theta from its full conditional based on the first forward filter
+s.eps.1 <- s.sigma.eps(T,nu_eps,y,afilt,sigma.2.hat_eps)
+s.eta.1 <- s.sigma.eta(T,nu_eta,alpha.t=afilt,alpha.tp=c(a0l0,afilt[1:(T-1)]),sigma.2.hat_eta)
 
 Bl_BGibbs = 100
-Bl_MGibbs = 10000 
+Bl_MGibbs = 10000
 Bl_Mreps = Bl_BGibbs + Bl_MGibbs # total number of replications of the state vector
 
 BState0 = rep(0,Bl_Mreps) # storage for generated states for time t=0
@@ -104,24 +122,20 @@ BStates = matrix(c(0),Bl_Mreps,T) # storage generated states for times t=1,2,..,
 BState0[1] = mean(y)
 BStates[1,] = y
 
-# Prior parameters
-# sigma.eta
-nu_eta <- 5
-sigma.2.hat.eta <- 1
-# sigma.epsilon
-nu_eps <- 4
-sigma.2.hat.eps <- 0.9
-
+eta.vec <- rep(s.eta.1,Bl_Mreps)
+eps.vec <- rep(s.eps.1,Bl_Mreps)
 for(iter in 1:Bl_Mreps){
   
-  BStates[iter,T] = rnorm(1,mean=afilt[T],sqrt(Pfilt[T]))
+  BStates[iter,T] = rnorm(1,mean=init[T,1],sqrt(init[T,2]))
   for(t in (T-1):0){
     if(t==0){
-      sigeta <- s.sigma.eps(T,nu_eta,y,a0l0,sigma.2.hat.eta)
+      sigeta <- 1
       BState0[iter]=BSt.f(a0l0,P0l0,BStates[iter,1],sigeta^2)
     } else {
-      sigeta <- s.sigma.eta(T,nu_eps,y,afilt[1:t],sigma.2.hat.eps)
-      BStates[iter,t]=BSt.f(afilt[t],Pfilt[t],BStates[iter,(t+1)],sigeta^2)
+      alph <- FFfunction(eta.vec[iter],eps.vec[iter]) 
+      BStates[iter,t]=BSt.f(alph[t,1],alph[t,2],BStates[iter,(t+1)],eta.vec[iter]^2)
+      eta.vec[iter+1] <- s.sigma.eta(T,nu_eta,alpha.t=alph[,1],alpha.tp=c(a0l0,alph[1:(T-1),1]),sigma.2.hat_eta)
+      eps.vec[iter+1] <- s.sigma.eps(T,nu_eps,y=y,alpha.t=alph[,1],sigma.2.hat_eps)
     }
   }
 }
