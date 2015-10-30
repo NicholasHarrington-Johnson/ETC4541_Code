@@ -23,9 +23,9 @@ x <- x.1+cumsum(eta.t)
 T <- length(x)
 
 # Define initial values for nu_n and sigma.hat
-# Apparently these are actually known so I am not going to change these
+# These are actually known so I am not going to change these
 # Starting value for prior parameter nu_bar
-nu_n <- T-1
+nu_n <- 1
 # Starting value for prior parameter 
 # Just guess this
 sigma.2.hat <- 1
@@ -46,7 +46,7 @@ s.posterior <- function(x,nu_n,sigma.2.hat){
   sigma.bar <- (nu_n*sigma.2.hat+ssq)/vbar
     
   # Calculate shape and rate
-  sigma <- 1/sqrt(rgamma(1,shape=vbar/2,rate=vbar*(sigma.bar^2)/2))
+  sigma <- 1/sqrt(rgamma(1,shape=vbar/2,rate=vbar*(sigma.bar)/2))
   return(sigma)
 }
 

@@ -83,8 +83,8 @@ wblock_fc.f = function(mu_in, sig_in, y_in, psi_in){
 ### Algorithm 3 (Augmented Gibbs Sampler)
 
 # define number of desired iterations
-B = 100 # burn-in draws
-NG = 10000 # retained draws
+B = 450 # burn-in draws
+NG = 2200 # retained draws
 
 # fix psi to its true value
 psi = psitrue
@@ -95,6 +95,8 @@ AGibbs = matrix(c(0),nrow=(B+NG),ncol=nobs+2)
 
 # initialise MCMC
 AGibbs[1,] = c(mean(y),sd(y),rep(1,nobs))
+
+#AGibbs[1,] = c(start_mean,start_sd,rep(1,nobs))
 
 # run the augmented Gibbs scheme!
 for(iter in 2:(B+NG)){

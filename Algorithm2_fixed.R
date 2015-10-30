@@ -128,8 +128,9 @@ sig_RWMH.f = function(mu_in, sig_last, y_in, psi_in, sig_tune){
 ### Algorithm 2 (Random Walk MH)
 
 # define number of desired iterations
-B = 100 # burn-in draws
+B = 700 # burn-in draws
 NG = 10000 # retained draws
+tuner<-c(0.1,0.1) #tuning parameters for mu and sig, respectively
 
 # fix psi to its true value
 psi = psitrue
@@ -141,7 +142,7 @@ RWMHGibbs = matrix(c(0),nrow=(B+NG),ncol=2)
 RWMHGibbs[1,] = c(mean(y),sd(y))
 
 # PLAY AROUND WITH THESE VALUES
-tuner<-c(0.1,0.1) #tuning parameters for mu and sig, respectively
+
 
 # run the MH within Gibbs scheme!
 for(iter in 2:(B+NG)){

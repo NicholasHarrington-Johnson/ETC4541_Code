@@ -18,7 +18,7 @@ s.sigma.eta <- function(T,nu_eta,alpha.t,alpha.tp,sigma.2.hat_eta){
   
   # Sampling
   
-  sigma <- 1/sqrt(rgamma(1,shape=nu_bar/2,rate=nu_bar*(sig.bar^2)/2))
+  sigma <- 1/sqrt(rgamma(1,shape=nu_bar/2,rate=nu_bar*(sig.bar)/2))
   
   return(sigma)
   
@@ -31,15 +31,13 @@ s.sigma.eps <- function(T,nu_eps,y,alpha.t,sigma.2.hat_eps){
   
   nu_bar <- T+nu_eps
   # y and alpha vector
-  # Note that alpha vector element 0 is ignored
-  # Alpha vector is of length (T+1)
   y2 <- sum((y-alpha.t)^2)
   
   sig.bar <- (nu_bar*sigma.2.hat_eps+y2)/(nu_bar)
   
   # Sampling
   
-  sigma <- 1/sqrt(rgamma(1,shape=nu_bar/2,rate=nu_bar*(sig.bar^2)/2))
+  sigma <- 1/sqrt(rgamma(1,shape=nu_bar/2,rate=nu_bar*(sig.bar)/2))
 
   return(sigma)
 

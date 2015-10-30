@@ -25,9 +25,9 @@ par(mfrow=c(1,1))
 plot(y,type="l")
 
 # Plot a kernel density estimate
+m <- ggplot(as.data.frame(y),aes(x=y))+ geom_density(aes(colour="y",fill="y"),alpha=0.4) + ggtitle("Estimated Density of Data")+theme(legend.position="none")
 savepdf("Data_K_Est")
-m <- ggplot(as.data.frame(y),aes(x=y))
-m + geom_density(aes(colour="y",fill="y"),alpha=0.4) + ggtitle("Estimated Density of Data")+theme(legend.position="none")
+print(m)
 dev.off()
 
 # Print summary statistics as latex code
@@ -133,7 +133,7 @@ sig_MH.f = function(mu_in, sig_last, y_in, psi_in){
 ### Algorithm 1 (MH using normal data full conditionals as candidate)
 
 # define number of desired iterations
-B = 100 # burn-in draws
+B = 700 # burn-in draws
 NG = 10000 # retained draws
 
 # fix psi to its true value

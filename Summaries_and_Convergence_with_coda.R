@@ -14,19 +14,26 @@
 
 # Be sure you have installed the coda package before you start
 library(coda)
-
+library(ggmcmc)
 # Create MCMC objects
-B1 = 500 # burnin may be redefined here
+B1 = 700 # burnin may be redefined here
 M1 = 2000 # number of retained draws redefined here too
-B2 <- 100
-M2 <- 6000
-B3 <- 250
-M3 <- 2000
+B2 <- 600
+M2 <- 2500
+B3 <- 450
+M3 <- 2200
+## Reedefine for part c
+B1 = 700 # burnin may be redefined here
+#M1 = 10000 # number of retained draws redefined here too
+B2 <- 600
+#M2 <- 10000
+B3 <- 450
+#M3 <- 10000
 
 MH.mcmc = mcmc(MHGibbs[(B1+1):(B1+M1),])
 RWMH.mcmc = mcmc(RWMHGibbs[(B2+1):(B2+M2),])
 # For A3 just ignore ws
-A3.mcmc = mcmc(AGibbs[(B3+1):(B3+M3),1:2])
+A3.mcmc = mcmc(AGibbs[(B3+1):(B3+M3),c(1:2)])
 
 # Numerical distributional summaries
 summary(MH.mcmc)
@@ -113,9 +120,10 @@ effectiveSize(RWMH.mcmc)
 effectiveSize(A3.mcmc)
 
 # Inefficiency Factors for each variable in each Markov chain
-M1/effectiveSize(MH.mcmc)
-M2/effectiveSize(RWMH.mcmc)
-M3/effectiveSize(A3.mcmc)
+M <-10000
+M/effectiveSize(MH.mcmc)
+M/effectiveSize(RWMH.mcmc)
+M/effectiveSize(A3.mcmc)
 
 # Rejection rates for each variable in each Markov chain
 rejectionRate(MH.mcmc)
@@ -124,3 +132,32 @@ rejectionRate(A3.mcmc)
 
 # Gelman
 #gelman.diag(MH.mcmc,confidence=0.95,transform=FALSE,autoburnin = FALSE,multivariate = TRUE)
+
+################################################################
+#Do an MCMC object for theta
+MH_theta <- data.frame(AGibbs[(B3+1):(B3+M3),1]/AGibbs[(B3+1):(B3+M3),2])
+colnames(MH_theta) <- c("theta")
+MH_theta.mcmc <- mcmc(MH_theta)
+A_T <- ggs(MH_theta.mcmc)
+# I don't actually like the way this density plot comes out
+#ggmcmc(A_T,file="theta_density.pdf",plot="density")
+m <- ggplot(MH_theta,aes(x=theta))+geom_density(aes(fill="theta",colour="theta"),alpha=0.4)+
+  ggtitle("Estimated Density of theta")+theme(legend.position="none")
+savepdf("theta_density")
+print(m)
+dev.off()
+summary(MH_theta.mcmc)
+
+################################################################
+
+# Alt stuff
+
+A3_alt.mcmc <- mcmc(alt_AGibbs[(B3+1):(B3+M3),c(1:2)])
+S_A3_alt <- ggs(A3_alt.mcmc)
+
+S_2_chains <- mcmc.list(A3.mcmc,A3_alt.mcmc)
+vis_2_chain <- ggs(S_2_chains)
+ggmcmc(vis_2_chain,file="2_chain_running.pdf",plot="running")
+ggmcmc(vis_2_chain,file="2_chain_acf.pdf",plot="autocorrelation")
+ggmcmc(vis_2_chain,file="2_chain_density.pdf",plot="density")
+ggmcmc(vis_2_chain,file="2_chain_tp.pdf",plot="traceplot")

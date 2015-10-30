@@ -1,3 +1,7 @@
+rm(list=ls())
+library(ggmcmc)
+source("functions.R")
+source("q3f.R")
 # Set priors for my functions
 nu_eps <- 1
 nu_eta <- 1
@@ -47,6 +51,10 @@ lines(0:T,c(alpha0.true,alpha.true),col="red")
 # sigsqeps is the variance of the measurement error (eps)
 # sigsqeta is the variance of the state error (eta)
 
+# setting initial state distribution
+a0l0 = 0
+P0l0 = 100
+
 # Forward filter
 FFfunction <- function(sigeta,sigeps){
   # initialise variables
@@ -58,9 +66,6 @@ FFfunction <- function(sigeta,sigeps){
   M = rep(0,T)
   F = rep(0,T)
   
-  # setting initial state distribution
-  a0l0 = 0
-  P0l0 = 100
 for(i in 1:T){
   if(i==1){
     apred[i] = a0l0 
@@ -83,7 +88,7 @@ for(i in 1:T){
 
 init <- FFfunction(sigeta.true,sigeps.true)
 
-lines(1:T,afilt[1:T],col="green")
+lines(1:T,init[1:T,1],col="green")
 
 # Backward sampling - want to replicate this many times, so put into a function
 BSt.f = function(filtat,filtPt,nextstatestar,sigsqstate){
@@ -94,6 +99,7 @@ BSt.f = function(filtat,filtPt,nextstatestar,sigsqstate){
 
   asmt = filtat + Mtstar*vtstar/Ftstar
   Psmt = sqrt(filtPt - Mtstar^2/Ftstar)
+  # These are just for numerical stability and aren't actually ever needed
   if(Psmt>1e9){
     print("Psmt is too big")
     Psmt <- 1e9
@@ -108,8 +114,8 @@ BSt.f = function(filtat,filtPt,nextstatestar,sigsqstate){
   return(out)
 }
 # Draw iteration 1 of theta from its full conditional based on the first forward filter
-s.eps.1 <- s.sigma.eps(T,nu_eps,y,afilt,sigma.2.hat_eps)
-s.eta.1 <- s.sigma.eta(T,nu_eta,alpha.t=afilt,alpha.tp=c(a0l0,afilt[1:(T-1)]),sigma.2.hat_eta)
+s.eps.1 <- s.sigma.eps(T,nu_eps,y,init[,1],sigma.2.hat_eps)
+s.eta.1 <- s.sigma.eta(T,nu_eta,alpha.t=init[,1],alpha.tp=c(a0l0,init[(1:(T-1)),1]),sigma.2.hat_eta)
 
 Bl_BGibbs = 100
 Bl_MGibbs = 10000
@@ -157,5 +163,59 @@ my.Bl_mcmc = mcmc(BStates,start=(Bl_BGibbs+1))
 summary(my.Bl_mcmc)
 
 effectiveSize(my.Bl_mcmc)
+##################################################################
+# Plot densities
+alpha_T <- as.data.frame(BStates[(Bl_BGibbs+1):Bl_Mreps,100])
+colnames(alpha_T) <- c("alpha.T")
+p.1 <- ggplot(alpha_T,aes(x=alpha.T))+geom_density(aes(fill="alpha.T",colour="alpha.T"),alpha=0.4)+
+  ggtitle(latex2exp("Marginal Distribution of $\\alpha_T$"))+
+  labs(x=latex2exp("$\\alpha_T$"),y="Density")
+savepdf("marg_alpha_T")
+print(p.1)
+dev.off()
 
+sig_eta <- as.data.frame(eta.vec[(Bl_BGibbs+1):Bl_Mreps])
+colnames(sig_eta) <- c("sigma_eta")
+p.2 <- ggplot(sig_eta,aes(x=sigma_eta))+geom_density(aes(fill="sigma_eta",colour="sigma_eta"),alpha=0.4)+
+  ggtitle(latex2exp("Marginal Distribution of $\\sigma_\\eta$"))+
+  labs(x=latex2exp("$\\sigma_\\eta$"),y="Density")
+savepdf("marg_sig_eta")
+print(p.2)
+dev.off()
+
+sig_eps <- as.data.frame(eps.vec[(Bl_BGibbs+1):Bl_Mreps])
+colnames(sig_eps) <- c("sigma_eps")
+p.3 <- ggplot(sig_eps,aes(x=sigma_eps))+geom_density(aes(fill="sigma_eps",colour="sigma_eps"),alpha=0.4)+
+  ggtitle(latex2exp("Marginal Distribution of $\\sigma_\\epsilon$"))+
+  labs(x=latex2exp("$\\sigma_\\epsilon$"),y="Density")
+savepdf("marg_sig_eps")
+print(p.3)
+dev.off()
+##################################################################
+stat_t <- mcmc(alpha_T)
+A_1 <- ggs(stat_t)
+ggmcmc(A_1,file="tplot_alpha_T.pdf",plot="traceplot")
+ggmcmc(A_1,file="alpha_T_running.pdf",plot="running")
+ggmcmc(A_1,file="alpha_T_acf.pdf",plot="autocorrelation")
+
+eta_t <- mcmc(sig_eta)
+A_2 <- ggs(eta_t)
+ggmcmc(A_2,file="tplot_sig_eta.pdf",plot="traceplot")
+ggmcmc(A_2,file="sig_eta_running.pdf",plot="running")
+ggmcmc(A_2,file="sig_eta_acf.pdf",plot="autocorrelation")
+
+eps_t <- mcmc(sig_eps)
+A_3 <- ggs(eps_t)
+ggmcmc(A_3,file="tplot_sig_eps.pdf",plot="traceplot")
+ggmcmc(A_3,file="sig_eps_running.pdf",plot="running")
+ggmcmc(A_3,file="sig_eps_acf.pdf",plot="autocorrelation")
+
+##################################################################
+# Mean and SD
+mean(BStates[(Bl_BGibbs+1):Bl_Mreps,100])
+mean(eta.vec[(Bl_BGibbs+1):Bl_Mreps])
+mean(eps.vec[(Bl_BGibbs+1):Bl_Mreps])
+sd(BStates[(Bl_BGibbs+1):Bl_Mreps,100])
+sd(eta.vec[(Bl_BGibbs+1):Bl_Mreps])
+sd(eps.vec[(Bl_BGibbs+1):Bl_Mreps])
 
